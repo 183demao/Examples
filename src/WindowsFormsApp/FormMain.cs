@@ -7,15 +7,55 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Extensions.DependencyInjection;
+
+using Riven.Repositories;
+using Riven.Uow;
+using WindowsFormsApp.Entitys.Samples;
 
 namespace WindowsFormsApp
 {
     public partial class FormMain : Form
     {
-        public FormMain()
+        readonly IServiceProvider _serviceProvider;
+        readonly IRepository<SampleEntity> _sampleEntityRepo;
+
+        public FormMain(IServiceProvider serviceProvider, IRepository<SampleEntity> sampleEntityRepo)
         {
+            _serviceProvider = serviceProvider;
+            _sampleEntityRepo = sampleEntityRepo;
+
+
             InitializeComponent();
+
+            this.Load += FormMain_Load;
         }
 
+        private void FormMain_Load(object sender, EventArgs e)
+        {
+            var scope = _serviceProvider.CreateScope();
+            var serviceProvider = scope.ServiceProvider;
+            var unitOfWorkManager = serviceProvider.GetService<IUnitOfWorkManager>();
+            var uow = unitOfWorkManager.Begin();
+
+
+            try
+            {
+                var result = _sampleEntityRepo.GetAll().ToList();
+
+
+                uow.Complete();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                uow?.Dispose();
+                scope?.Dispose();
+            }
+
+        }
     }
 }
