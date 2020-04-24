@@ -35,16 +35,18 @@ namespace WindowsFormsApp
         {
             var scope = _serviceProvider.CreateScope();
             var serviceProvider = scope.ServiceProvider;
-            var unitOfWorkManager = serviceProvider.GetService<IUnitOfWorkManager>();
-            var uow = unitOfWorkManager.Begin();
 
 
             try
             {
-                var result = _sampleEntityRepo.GetAll().ToList();
+                var unitOfWorkManager = serviceProvider.GetService<IUnitOfWorkManager>();
+                using (var uow = unitOfWorkManager.Begin())
+                {
+                    var result = _sampleEntityRepo.GetAll().ToList();
 
 
-                uow.Complete();
+                    uow.Complete();
+                }
             }
             catch (Exception ex)
             {
@@ -52,7 +54,6 @@ namespace WindowsFormsApp
             }
             finally
             {
-                uow?.Dispose();
                 scope?.Dispose();
             }
 
